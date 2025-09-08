@@ -6,7 +6,7 @@ import i18n from 'i18next';
 import initI18n from '../../i18n/initialize.js';
 import './MapTemplate.scss';
 import { mapClickActions } from '../../constants/mapClickActions.js';
-import MapWrapper from '../MapWrapper/MapWrapper';
+import MapWrapper from "../MapWrapper/MapWrapper";
 import SplashScreen from '../SplashScreen/SplashScreen';
 import VenueSelector from '../VenueSelector/VenueSelector';
 import BottomSheet from '../BottomSheet/BottomSheet';
@@ -20,6 +20,7 @@ import venuesInSolutionState from '../../atoms/venuesInSolutionState';
 import solutionState from '../../atoms/solutionState.js';
 import { useAppHistory } from '../../hooks/useAppHistory';
 import { useReset } from '../../hooks/useReset.js';
+import useMediaQuery from '../../hooks/useMediaQuery';
 import Sidebar from '../Sidebar/Sidebar';
 import useLocationForWayfinding from '../../hooks/useLocationForWayfinding';
 import locationIdState from '../../atoms/locationIdState';
@@ -61,8 +62,6 @@ import isNullOrUndefined from '../../helpers/isNullOrUndefined.js';
 import centerState from '../../atoms/centerState.js';
 import PropTypes from 'prop-types';
 import { ZoomLevelValues } from '../../constants/zoomLevelValues.js';
-import { useOnRouteFinished } from '../../hooks/useOnRouteFinished.js';
-import notificationMessageState from '../../atoms/notificationMessageState.js';
 
 // Define the Custom Elements from our components package.
 defineCustomElements();
@@ -86,8 +85,8 @@ MapTemplate.propTypes = {
     gmMapId: PropTypes.string,
     useMapProviderModule: PropTypes.bool,
     kioskOriginLocationId: PropTypes.string,
-    language: PropTypes.string,
     timeout: PropTypes.number,
+    language: PropTypes.string,
     useKeyboard: PropTypes.bool,
     miTransitionLevel: PropTypes.number,
     category: PropTypes.string,
@@ -98,9 +97,7 @@ MapTemplate.propTypes = {
     searchExternalLocations: PropTypes.bool,
     supportsUrlParameters: PropTypes.bool,
     center: PropTypes.string,
-    useAppTitle: PropTypes.bool,
-    showMapMarkers: PropTypes.bool,
-    mapboxMapStyle: PropTypes.string
+    useAppTitle: PropTypes.bool
 };
 
 /**
@@ -124,7 +121,7 @@ MapTemplate.propTypes = {
  * @param {string} [props.gmMapId] - The Google Maps Map ID associated with a specific map style or feature.
  * @param {boolean} [props.useMapProviderModule] - Set to true if the Map Template should take MapsIndoors solution modules into consideration when determining what map type to use.
  * @param {string} [props.kioskOriginLocationId] - If running the Map Template as a kiosk (upcoming feature), provide the Location ID that represents the location of the kiosk.
- * @param {string} [props.language] - The language to show textual content in. Supported values are "en" for English, "da" for Danish, "de" for German, "fr" for French, "it" for Italian, "es" for Spanish, "nl" for Dutch and "zh" for Chinese. If the prop is not set, the language of the browser will be used (if it is one of the supported languages - otherwise it will default to English).
+ * @param {string} [props.language] - The language to show textual content in. Supported values are "en" for English, "da" for Danish, "de" for German, "fr" for French, "it" for Italian, "es" for Spanish and "nl" for Dutch. If the prop is not set, the language of the browser will be used (if it is one of the supported languages - otherwise it will default to English).
  * @param {boolean} [props.supportsUrlParameters] - Set to true if you want to support URL Parameters to configure the Map Template.
  * @param {boolean} [props.useKeyboard] - If running the Map Template as a kiosk, set this prop to true and it will prompt a keyboard.
  * @param {number} [props.timeout] - If you want the Map Template to reset map position and UI elements to the initial state after some time of inactivity, use this to specify the number of seconds of inactivity before resetting.
@@ -136,12 +133,9 @@ MapTemplate.propTypes = {
  * @param {boolean} [props.searchExternalLocations] - If you want to perform search for external locations in the Wayfinding mode. If set to true, Mapbox/Google places will be displayed depending on the Map Provider you are using. If set to false, the results returned will only be MapsIndoors results. The default is true.
  * @param {string} [props.center] - Specifies the coordinates where the map should load, represented as longitude and latitude values separated by a comma. If the specified coordinates intersect with a Venue, that Venue will be set as the current Venue.
  * @param {boolean} [props.useAppTitle] - Specifies if the Map Template should set the document title as defined in the App Config. The default value is set to false.
- * @param {boolean} [props.showMapMarkers] - Specifies if the Map Template should show the base map providers Map Markers. The default value is set to true.
- * @param {string} [props.mapboxMapStyle] - Specifies the Mapbox Map Style to use. The default value is set to "mapbox://styles/mapbox/standard".
  */
-function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, primaryColor, logo, appUserRoles, directionsFrom, directionsTo, externalIDs, tileStyle, startZoomLevel, bearing, pitch, gmMapId, useMapProviderModule, kioskOriginLocationId, language, supportsUrlParameters, useKeyboard, timeout, miTransitionLevel, category, searchAllVenues, hideNonMatches, showRoadNames, showExternalIDs, searchExternalLocations, center, useAppTitle, showMapMarkers, mapboxMapStyle }) {
+function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, primaryColor, logo, appUserRoles, directionsFrom, directionsTo, externalIDs, tileStyle, startZoomLevel, bearing, pitch, gmMapId, useMapProviderModule, kioskOriginLocationId, language, supportsUrlParameters, useKeyboard, timeout, miTransitionLevel, category, searchAllVenues, hideNonMatches, showRoadNames, showExternalIDs, searchExternalLocations, center, useAppTitle }) {
 
-    const [userSelectedLanguage, setUserSelectedLanguage] = useState(false);
     const [mapOptions, setMapOptions] = useState({ brandingColor: primaryColor });
     const [, setApiKey] = useRecoilState(apiKeyState);
     const [, setGmApiKey] = useRecoilState(gmApiKeyState);
@@ -151,7 +145,7 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     const [currentLocation, setCurrentLocation] = useRecoilState(currentLocationState);
     const categories = useRecoilValue(categoriesState);
     const [, setLocationId] = useRecoilState(locationIdState);
-    const [color, setPrimaryColor] = useRecoilState(primaryColorState);
+    const [, setPrimaryColor] = useRecoilState(primaryColorState);
     const [, setLogo] = useRecoilState(logoState);
     const [, setGmMapId] = useRecoilState(gmMapIdState);
     const mapsIndoorsInstance = useRecoilValue(mapsIndoorsInstanceState);
@@ -175,7 +169,7 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     const mapClickActionRef = useRef();
     const [, setWayfindingLocation] = useRecoilState(wayfindingLocationState);
     const qrCodeLink = useRecoilValue(qrCodeLinkState)
-
+    
     const [isMaximized, setIsMaximized] = useState(false);
 
     const [showVenueSelector, setShowVenueSelector] = useState(true);
@@ -205,6 +199,7 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     const [, setPitch] = useRecoilState(pitchState);
 
     const isDesktop = useIsDesktop();
+    const isMobile = useMediaQuery('(max-width: 991px)');
     const resetState = useReset();
     const [pushAppView, goBack, currentAppView, currentAppViewPayload, appStates, resetAppHistory] = useAppHistory();
 
@@ -217,9 +212,6 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     const [resetCount, setResetCount] = useState(0);
 
     const [setCurrentVenueName, updateCategories] = useCurrentVenue();
-
-    const finishRoute = useOnRouteFinished();
-    const [, setErrorMessage] = useRecoilState(notificationMessageState);
 
     /**
      * Ensure that MapsIndoors Web SDK is available.
@@ -234,8 +226,8 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
 
             const miSdkApiTag = document.createElement('script');
             miSdkApiTag.setAttribute('type', 'text/javascript');
-            miSdkApiTag.setAttribute('src', 'https://app.mapsindoors.com/mapsindoors/js/sdk/4.42.0/mapsindoors-4.42.0.js.gz');
-            miSdkApiTag.setAttribute('integrity', 'sha384-K7OSiO1zZZKdjCQCKlzzLLcu3hz/532y8aKaQv44US4K7SZkKmXHrQSP+fqc9Lj0');
+            miSdkApiTag.setAttribute('src', 'https://app.mapsindoors.com/mapsindoors/js/sdk/4.40.2/mapsindoors-4.40.2.js.gz');
+            miSdkApiTag.setAttribute('integrity', 'sha384-tFHttWqE6qOoX8etJurRBBXpH6puWNTgC8Ilq477ltu4EcpHk9ZwFPJDIli9wAS7');
             miSdkApiTag.setAttribute('crossorigin', 'anonymous');
             document.body.appendChild(miSdkApiTag);
             miSdkApiTag.onload = () => {
@@ -244,18 +236,18 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
         });
     }
 
-    // On initial load, set currentLanguage from URL prop or appConfig if not already set by user.
-    // This allows user selection to always take precedence after first interaction.
-    // Note: On reload, language will revert to URL or appConfig unless user selects again.
-    useEffect(() => {
-        if (!currentLanguage) {
-            if (language) {
-                setCurrentLanguage(language);
-            } else if (appConfig?.appSettings?.language) {
-                setCurrentLanguage(appConfig.appSettings.language);
-            }
-        }
-    }, [language, appConfig, currentLanguage, setCurrentLanguage]);
+    /**
+     * Updates the map options state by merging new options with existing ones
+     * @param {Object} newMapOptions - The new map options to merge with existing options
+     * @returns {void}
+     */
+    const handleMapOptionsChange = (newMapOptions) => {
+        setMapOptions(previousMapOptions => ({
+            ...previousMapOptions,
+            ...newMapOptions,
+            minZoom: ZoomLevelValues.minZoom
+        }))
+    };
 
     /*
      * If the app is inactive, run code to reset UI and state.
@@ -280,13 +272,12 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     }, []);
 
     /*
-     * React on changes in the currentLanguage (from Recoil).
+     * React on changes in the language prop.
      * If it is undefined, try to use the browser language. It will fall back to English if the language is not supported.
      */
     useEffect(() => {
         if (mapsindoorsSDKAvailable) {
-            // Sets language to use. Priority: currentLanguage -> language prop -> App Config -> browser's default language.
-            const languageToUse = currentLanguage ?? language ?? appConfig?.appSettings?.language ?? navigator.language;
+            const languageToUse = language ? language : navigator.language;
 
             // Set the language on the MapsIndoors SDK in order to get eg. Mapbox and Google directions in that language.
             // The MapsIndoors data only accepts the first part of the IETF language string, hence the split.
@@ -313,17 +304,18 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
                 }
             });
 
-            // Ensure MapsIndoors uses the user's selected language if supported,
-            // so all map content and UI are localized accordingly.
-            if (!i18n.language || i18n.language !== languageToUse) {
-                if (!i18n.isInitialized) {
-                    initI18n(languageToUse);
-                } else {
-                    i18n.changeLanguage(languageToUse);
-                }
+            if (!currentLanguage) {
+                // Initialize i18n instance that is used to assist translating in the React components.
+                initI18n(languageToUse);
+            } else {
+                // Change the already set language
+                i18n.changeLanguage(languageToUse);
             }
+
+
+            setCurrentLanguage(languageToUse);
         }
-    }, [currentLanguage, language, mapsindoorsSDKAvailable, appConfig]);
+    }, [language, mapsindoorsSDKAvailable]);
 
     /**
      * React on changes in the MapsIndoors API key by fetching the required data.
@@ -366,17 +358,8 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
      */
     useEffect(() => {
         if (mapsindoorsSDKAvailable && appConfig) {
-            if (
-                isNullOrUndefined(mapboxAccessToken) &&
-                isNullOrUndefined(gmApiKey) &&
-                isNullOrUndefined(appConfig?.appSettings?.mapboxAccessToken) &&
-                isNullOrUndefined(appConfig?.appSettings?.gmKey)
-            ) {
-                setErrorMessage({ text: 'Please provide a Mapbox Access Token or Google Maps API key to show a map.', type: 'error' });
-            } else {
-                setMapboxAccessToken(mapboxAccessToken || appConfig.appSettings?.mapboxAccessToken);
-                setGmApiKey(gmApiKey || appConfig.appSettings?.gmKey);
-            }
+            setMapboxAccessToken(mapboxAccessToken || appConfig.appSettings?.mapboxAccessToken);
+            setGmApiKey(gmApiKey || appConfig.appSettings?.gmKey);
         }
     }, [gmApiKey, mapboxAccessToken, mapsindoorsSDKAvailable, appConfig]);
 
@@ -475,11 +458,11 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     }, [currentAppView]);
 
     /*
-     * React on changes in the venue prop. If not defined, check if it is defined in app config.
+     * React on changes in the venue prop.
      */
     useEffect(() => {
-        setCurrentVenueName(venue ?? appConfig?.appSettings?.venue);
-    }, [venue, appConfig]);
+        setCurrentVenueName(venue);
+    }, [venue]);
 
     /*
      * React on changes in the tile style prop.
@@ -489,77 +472,44 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     }, [tileStyle]);
 
     /*
-     * React on changes in the primary color prop. If not defined, check if it is defined in app config. Otherwise set to default color.
+     * React on changes in the primary color prop.
      */
     useEffect(() => {
-        const defaultPrimaryColor = '#003C3B'; // --brand-colors-dark-pine-100 from MIDT
-        setPrimaryColor(primaryColor ?? appConfig?.appSettings?.primaryColor ?? defaultPrimaryColor);
-    }, [primaryColor, appConfig]);
+        setPrimaryColor(primaryColor);
+    }, [primaryColor]);
 
     /*
-     * React on changes in the map options props (primary color, showRoadNames, miTransitionLevel).
-     * This effect updates the mapOptions state accordingly.
+     * React on changes in the start zoom level prop.
      */
     useEffect(() => {
-        setMapOptions({
-            brandingColor: color,
-            // Ensure showRoadNames and showMapMarkers are booleans, even if appConfig.appSettings.showRoadNames/showMapMarkers is a string
-            showRoadNames:
-                showRoadNames !== undefined
-                    ? showRoadNames
-                    : (typeof appConfig?.appSettings?.showRoadNames === 'string'
-                        ? appConfig.appSettings.showRoadNames.toLowerCase() === 'true'
-                        : appConfig?.appSettings?.showRoadNames),
-            showMapMarkers:
-                showMapMarkers !== undefined
-                    ? showMapMarkers
-                    : (typeof appConfig?.appSettings?.showMapMarkers === 'string'
-                        ? appConfig.appSettings.showMapMarkers.toLowerCase() === 'true'
-                        : appConfig?.appSettings?.showMapMarkers),
-            miTransitionLevel: miTransitionLevel,
-            minZoom: ZoomLevelValues.minZoom,
-            mapboxMapStyle: appConfig?.appSettings?.mapboxMapStyle || mapboxMapStyle
-        })
-    }, [primaryColor, showRoadNames, miTransitionLevel, color, showMapMarkers, appConfig]);
+        setStartZoomLevel(startZoomLevel);
+    }, [startZoomLevel]);
 
     /*
-     * React on changes in the start zoom level prop. If not defined, check if it is defined in app config.
-     */
-    useEffect(() => {
-        setStartZoomLevel(startZoomLevel ?? appConfig?.appSettings?.startZoomLevel);
-    }, [startZoomLevel, appConfig]);
-
-    /*
-     * React on changes in the pitch prop. If not defined, check if it is defined in app config.
+     * React on changes in the pitch prop.
      * If the pitch is not set, set it to 45 degrees if the view mode switch is visible.
      */
     useEffect(() => {
-        const desiredPitch = pitch ?? appConfig?.appSettings?.pitch ?? null;
-
-        if (!isNullOrUndefined(desiredPitch)) {
-            setPitch(desiredPitch);
+        if (!isNullOrUndefined(pitch)) {
+            setPitch(pitch);
         } else if (viewModeSwitchVisible) {
             setPitch(45);
         }
-
-    }, [pitch, viewModeSwitchVisible, appConfig]);
-
-    /*
-     * React on changes in the bearing prop. If not defined, check if it is defined in app config.
-     */
-    useEffect(() => {
-        setBearing(bearing ?? appConfig?.appSettings?.bearing ?? null);
-    }, [bearing, appConfig]);
+    }, [pitch, viewModeSwitchVisible]);
 
     /*
-     * React on changes in the logo prop. If not defined, check if it is defined in app config. Otherwise set to default logo.
+     * React on changes in the bearing prop.
      */
     useEffect(() => {
-        const defaultLogo = 'https://app.mapsindoors.com/mapsindoors/gfx/mapspeople-logo/mapspeople-pin.svg';
-        if (appConfig) {
-            setLogo(logo ?? appConfig?.appSettings?.logo ?? defaultLogo);
-        }
-    }, [logo, appConfig]);
+        setBearing(bearing);
+    }, [bearing]);
+
+    /*
+     * React on changes in the logo prop.
+     */
+    useEffect(() => {
+        setLogo(logo);
+    }, [logo]);
 
     /*
      * React on changes in the miTransitionLevel prop.
@@ -610,7 +560,7 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     }, [kioskOriginLocationId, mapsindoorsSDKAvailable]);
 
     /*
-     * React on changes to the timeout prop
+     * React on changes to the timout prop
      */
     useEffect(() => {
         setTimeoutValue(timeout);
@@ -682,8 +632,8 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
      * React on changes to the center prop.
      */
     useEffect(() => {
-        setCenter(center ?? appConfig?.appSettings?.center);
-    }, [center, appConfig]);
+        setCenter(center);
+    }, [center]);
 
     /*
      * Sets document title based on useAppTitle and appConfig values.
@@ -738,16 +688,6 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
         setSelectedCategory(null); // unselect category when route is finished
     }
 
-    /**
-     * Function that handles the finishing of route.
-     */
-    function onRouteFinish() {
-        finishRoute();
-        resetAppHistory();
-        setResetCount(curr => curr + 1); // will force a re-render of bottom sheet and sidebar.
-        setSelectedCategory(null); // unselect category when route is finished
-    }
-
     /*
      * React on changes in the category prop.
      * Check if the category property matches with any of the existing categories.
@@ -759,20 +699,6 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
             setCategory(category);
         }
     }, [category, categories, mapsindoorsSDKAvailable]);
-
-    // On initial load, if a language prop is provided and user hasn't explicitly selected a language,
-    // set the current language to the prop value. This allows the URL language to take effect
-    // until the user makes a selection. Note: If the page is reloaded, the language will
-    // revert to the URL-provided value unless the user selects a different language again.
-    useEffect(() => {
-        if (!userSelectedLanguage) {
-            if (language && currentLanguage !== language) {
-                setCurrentLanguage(language);
-            } else if (!language && appConfig?.appSettings?.language && currentLanguage !== appConfig.appSettings.language) {
-                setCurrentLanguage(appConfig.appSettings.language);
-            }
-        }
-    }, [language, appConfig, currentLanguage, setCurrentLanguage, userSelectedLanguage]);
 
     return <div className={`mapsindoors-map
     ${currentAppView === appStates.DIRECTIONS ? 'mapsindoors-map--hide-elements' : 'mapsindoors-map--show-elements'}
@@ -787,30 +713,65 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
         />}
         {qrCodeLink && <QRCodeDialog />}
         {showLegendDialog && <LegendDialog />}
-        {isMapPositionInvestigating &&
-            <Fragment key={resetCount}>
-                {isDesktop &&
-                    <Sidebar
-                        directionsFromLocation={directionsFromLocation}
-                        directionsToLocation={directionsToLocation}
-                        pushAppView={pushAppView}
-                        currentAppView={currentAppView}
-                        appViews={appStates}
-                        onRouteFinished={() => onRouteFinish()}
-                    />
-                }
-                {!isDesktop &&
-                    <BottomSheet
-                        directionsFromLocation={directionsFromLocation}
-                        directionsToLocation={directionsToLocation}
-                        pushAppView={pushAppView}
-                        currentAppView={currentAppView}
-                        appViews={appStates}
-                        onRouteFinished={() => onRouteFinish()}
-                    />
-                }
-            </Fragment>
-        }
+        {isMapPositionInvestigating && (
+        <Fragment key={resetCount}>
+          {isDesktop &&
+            (!isMaximized ? (
+              <>
+                <button
+                  style={{
+                    color: "blue",
+                    height: "40px",
+                    width: "120px",
+                    position: "absolute",
+                    right: "20px",
+                    top: "20px",
+                    zIndex: 1000,
+                  }}
+                  onClick={() => setIsMaximized(true)}
+                >
+                  Click to expand
+                </button>
+                <Sidebar
+                  directionsFromLocation={directionsFromLocation}
+                  directionsToLocation={directionsToLocation}
+                  pushAppView={pushAppView}
+                  currentAppView={currentAppView}
+                  appViews={appStates}
+                  onRouteFinished={() => resetStateAndUI()}
+                />
+              </>
+            ) : (
+              <>
+                <button
+                  style={{
+                    color: "blue",
+                    height: "40px",
+                    width: "120px",
+                    position: "absolute",
+                    right: "20px",
+                    top: "20px",
+                    zIndex: 1000,
+                  }}
+                  onClick={() => setIsMaximized(false)}
+                >
+                  Click to collapse
+                </button>
+                {/* <Search isOpen={currentAppView === appViews.SEARCH} />{" "} */}
+              </>
+            ))}
+          {isMobile && (
+            <BottomSheet
+              directionsFromLocation={directionsFromLocation}
+              directionsToLocation={directionsToLocation}
+              pushAppView={pushAppView}
+              currentAppView={currentAppView}
+              appViews={appStates}
+              onRouteFinished={() => resetStateAndUI()}
+            />
+          )}
+        </Fragment>
+      )}
         <MapWrapper
             useMapProviderModule={useMapProviderModule}
             onMapPositionKnown={() => mapPositionKnown()}
@@ -819,13 +780,8 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
             onViewModeSwitchKnown={visible => setViewModeSwitchVisible(visible)}
             resetCount={resetCount}
             mapOptions={mapOptions}
+            onMapOptionsChange={handleMapOptionsChange}
             gmMapId={gmMapId}
-            isWayfindingOrDirections={currentAppView === appStates.WAYFINDING || currentAppView === appStates.DIRECTIONS}
-            currentLanguage={currentLanguage}
-            setLanguage={(languageToSet) => {
-                setCurrentLanguage(languageToSet);
-                setUserSelectedLanguage(true);
-            }}
         />
     </div>
 }
