@@ -5,6 +5,202 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.83.0] - 2025-09-02
+
+### Added
+
+- New `mapboxMapStyle` prop that specifies Mapbox base map style.
+
+## [1.82.1] - 2025-08-20
+
+### Fixed
+
+- Fixed scrollability on smaller screens by increasing the bottom sheet grab area
+
+## [1.82.0] - 2025-08-19
+
+### Added
+
+- Added lazy loading for Mapbox and Google Maps providers to improve initial page load performance
+
+## [1.81.6] - 2025-08-18
+
+### Fixed
+
+- Fixed extra media query in the `MapTemplate` component by using the useIsDesktop Hook instead
+
+## [1.81.5] - 2025-08-13
+
+### Changed
+
+- Removed Sentry from the map-template package
+
+## [1.81.4] - 2025-08-13
+
+### Fixed
+
+- Fixed a rare crash in the `OpeningHours` component when `startHours` was null by adding an additional null check
+
+## [1.81.3] - 2025-08-12
+
+### Fixed
+
+- Upgraded non-breaking depdenencies for the components package
+
+## [1.81.2] - 2025-08-05
+
+### Fixed
+
+- `showRoadNames` is configurable through the App Config object.
+- `showMapMarkers` is configurable through the App Config object.
+
+## [1.81.1] - 2025-08-05
+
+### Fixed
+
+- Fix removing `kioskOriginlocationId` display rule not reverting at runtime
+
+## [1.81.0] - 2025-08-04
+
+### Added
+
+- New `showMapMarkers` prop that specifies if the Google Maps/Mapbox specific map markers are shown or not.
+
+## [1.80.4] - 2025-07-31
+
+### Fixed
+
+- Fix gradients not showin in location details component
+
+## [1.80.3] - 2025-07-30
+
+### Fixed
+
+- Fix linting issues caused by the new lint rules
+
+## [1.80.2] - 2025-07-30
+
+### Fixed
+
+- Upgraded to SDK v4.41.2.
+
+## [1.80.1] - 2025-07-03
+
+### Fixed
+
+- An issue where `miTransitionLevel` and `showRoadNames` values were not respected.
+
+## [1.80.0] - 2025-06-30
+
+### Added
+
+- Implemented a Language Selector. 
+- Language Selector visibility is configurable through the App Config object.
+
+## [1.79.6] - 2025-06-26
+
+### Fixed
+
+- Timing issue in Splash Screen component that could result in a brief appearance of a broken image placeholder.
+
+## [1.79.5] - 2025-06-25
+
+### Fixed
+
+- Fixed packages issues after upgrading to mapbox-gl v3.8.0.
+
+## [1.79.4] - 2025-06-25
+
+### Fixed
+
+- Upgraded to SDK v4.41.0.
+- Upgraded to mapbox-gl v3.8.0.
+
+## [1.79.3] - 2025-06-23
+
+### Fixed
+
+- Fix modal height while in wayfinding and directions mode
+
+## [1.79.2] - 2025-06-19
+
+### Fixed
+
+- Show error message when `mapboxAccessToken` and `gmApiKey` are not present in the App Config object and in query parameter.
+
+## [1.79.1] - 2025-06-19
+
+### Fixed
+
+- Improved the view selector component with minor enhancements and added a disabled state when in Wayfinding and Directions modes.
+
+## [1.79.0] - 2025-06-18
+
+### Added
+
+- If `language`, `primaryColor`, `mapboxAccessToken`, `gmApiKey`, `logo`, `venue`, `startZoomLevel`, `pitch`, `bearing` and `center` props are not explicitly provided, their value will be determined by the App Config object.
+- View Selector visibility is now configurable through the App Config object.
+
+## [1.78.4] - 2025-06-16
+
+### Fixed
+
+- Fixed an issue where the categories list would close when clicking on other UI elements, such as the zoom controls or floor selector.
+
+## [1.78.3] - 2025-06-12
+
+### Fixed
+
+- Fixed an issue where a slow route request would risk override a later, faster one, resulting in the shown route suddenly shifting to an unexpected one.
+
+## [1.78.2] - 2025-06-12
+
+### Fixed
+
+- Made the header in location details view sticky to improve navigation experience while scrolling
+
+## [1.78.1] - 2025-06-11
+
+### Fixed
+
+- Various layout issues with the Bottom Sheet and Sheet components by cleaning up the internal interface.
+
+## [1.78.0] - 2025-06-05
+
+### Added
+
+- Add support for Chinese language.
+
+## [1.77.0] - 2025-06-04
+
+### Added
+
+- Added view selector component
+
+## [1.76.8] - 2025-06-02
+
+### Fixed
+
+- Upgraded to SDK v4.41.0.
+
+## [1.76.7] - 2025-05-27
+
+### Fixed
+
+- Modal styling issue causing unnecessary scrollbar to appear
+
+## [1.76.6] - 2025-05-27
+
+### Fixed
+
+- Fixed an issue where clicking 'Finish Route' would unexpectedly switch the venue.
+
+## [1.76.5] - 2025-05-22
+
+### Fixed
+
+- Fixed sidebar position when in kiosk mode
+
 ### [1.76.4] - 2025-05-15
 
 ### Fixed

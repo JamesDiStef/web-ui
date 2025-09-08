@@ -23,7 +23,7 @@ import searchInputState from '../../atoms/searchInputState';
 import searchResultsState from '../../atoms/searchResultsState';
 import selectedCategoryState from '../../atoms/selectedCategoryState';
 import Categories from './Categories/Categories';
-import { useIsKioskContext } from "../../hooks/useIsKioskContext";
+import { useIsKioskContext } from '../../hooks/useIsKioskContext';
 import { useIsDesktop } from '../../hooks/useIsDesktop';
 import { ReactComponent as Legend } from '../../assets/legend.svg';
 import isLegendDialogVisibleState from '../../atoms/isLegendDialogVisibleState';
@@ -56,6 +56,7 @@ function Search({ onSetSize, isOpen }) {
 
     const searchRef = useRef();
     const scrollButtonsRef = useRef();
+    const requestAnimationFrameId = useRef();
 
     /** Referencing the search field */
     const searchFieldRef = useRef();
@@ -161,7 +162,7 @@ function Search({ onSetSize, isOpen }) {
             selectedCategoriesArray.current.push(category);
         }
 
-        // If child category is being selected, we need to clear parent categories results in order to load proper data that belongs to child category. 
+        // If child category is being selected, we need to clear parent categories results in order to load proper data that belongs to child category.
         if (selectedCategory) {
             setSelectedCategory([]);
             setSearchResults([]);
@@ -200,7 +201,7 @@ function Search({ onSetSize, isOpen }) {
 
         // Expand the sheet to occupy the entire screen
         setSize(snapPoints.MAX);
-        
+
         setSearchResults(displayResults);
         setFilteredLocations(displayResults);
         setShowNotFoundMessage(displayResults.length === 0);
@@ -399,16 +400,26 @@ function Search({ onSetSize, isOpen }) {
     useEffect(() => {
         const SEARCH_FOCUS_ELEMENTS = ['.search__info', '.search__back-button', '.categories', '.sheet__content'];
 
+        // We want to ignore: Floor Selector, View Mode Switch, My Position, View Selector, Mapbox zoom controls and Google Maps zoom controls
+        const IGNORE_CLOSE_ELEMENTS = ['.mi-floor-selector', '.view-mode-switch', '.mi-my-position', '.view-selector__toggle-button', '.building-list', '.mapboxgl-ctrl-bottom-right', '.gmnoprint', '.language-selector-portal'];
+
         const handleSearchFieldFocus = (event) => {
             const clickedInsideSearchArea = SEARCH_FOCUS_ELEMENTS.some(selector =>
                 event.target.closest(selector)
             );
+
+            const clickedInsideIgnoreArea = IGNORE_CLOSE_ELEMENTS.some(selector =>
+                event.target.closest(selector)
+            );
+
             const clickedInsideResults = event.target.closest('.search__results');
 
             if (clickedInsideSearchArea) {
-                setIsInputFieldInFocus(true);
-                setSize(snapPoints.FIT);
-            } else if (!clickedInsideResults) {
+                setSize(snapPoints.MAX);
+                requestAnimationFrameId.current = requestAnimationFrame(() => { // we use a requestAnimationFrame to ensure that the size change is applied before the focus (meaning that categories are rendered)
+                    setIsInputFieldInFocus(true);
+                });
+            } else if (!clickedInsideResults && !clickedInsideIgnoreArea) {
                 setIsInputFieldInFocus(false);
                 setSize(snapPoints.MIN);
                 setSelectedCategory(null);
@@ -418,11 +429,21 @@ function Search({ onSetSize, isOpen }) {
             }
         };
 
-        document.addEventListener('click', handleSearchFieldFocus);
+        if (isOpen) {
+            requestAnimationFrameId.current = requestAnimationFrame(() => { // we use a requestAnimationFrame to ensure that the click is not registered too early (while other sheets are still "active")
+                document.addEventListener('click', handleSearchFieldFocus);
+            });
+        } else {
+            document.removeEventListener('click', handleSearchFieldFocus);
+        }
+
         return () => {
             document.removeEventListener('click', handleSearchFieldFocus);
-        };
-    }, []);
+            if (requestAnimationFrameId.current) {
+                cancelAnimationFrame(requestAnimationFrameId.current);
+            }
+        }
+    }, [isOpen]);
 
     /*
      * Sets currently hovered location.
@@ -493,9 +514,9 @@ function Search({ onSetSize, isOpen }) {
                 }
             };
 
-            window.addEventListener("click", onClick, false);
+            window.addEventListener('click', onClick, false);
             return () => {
-                window.removeEventListener("click", onClick, false);
+                window.removeEventListener('click', onClick, false);
             };
         }
     }, [useKeyboard]);
@@ -521,7 +542,7 @@ function Search({ onSetSize, isOpen }) {
     }, [kioskLocation]);
 
     /**
-     * 
+     *
      */
     useEffect(() => {
         const childKeys = categories.find(([key]) => key === selectedCategory)?.[1]?.childKeys || [];
@@ -536,8 +557,8 @@ function Search({ onSetSize, isOpen }) {
 
             { /* Search info which includes legend button if in a Kiosk context. */}
 
-            <div className='search__info' style={{ gridTemplateColumns: isKioskContext && showLegendButton ? 'min-content 1fr' : 'auto' }}>
-                {isKioskContext && showLegendButton && <button className='search__legend' onClick={() => setShowLegendDialog(true)}><Legend /></button>}
+            <div className="search__info" style={{ gridTemplateColumns: isKioskContext && showLegendButton ? 'min-content 1fr' : 'auto' }}>
+                {isKioskContext && showLegendButton && <button className="search__legend" onClick={() => setShowLegendDialog(true)}><Legend /></button>}
 
                 { /* Search field that allows users to search for locations (MapsIndoors Locations and external) */}
                 <label className="search__label">
@@ -587,7 +608,7 @@ function Search({ onSetSize, isOpen }) {
                     )}
 
                     {/* Show locations when there are any searchResults */}
-                    <div className='search__results'>
+                    <div className="search__results">
                         {searchResults.map(location =>
                             <ListItemLocation
                                 key={location.id}

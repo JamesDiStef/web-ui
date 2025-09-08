@@ -78,6 +78,11 @@ const it = {
     //Opening Hours
     'Open': 'Aperto',
     'Closed': 'Chiuso',
+    // View Selector
+    'Go to view': 'Mostra posizione',
+    'Close view selector': 'Chiudi selettore vista',
+    // Language Selector
+    'Select language': 'Seleziona lingua',
 };
 
 export default it;

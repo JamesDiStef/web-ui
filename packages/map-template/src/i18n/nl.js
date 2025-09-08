@@ -78,6 +78,11 @@ const nl = {
     // Opening Hours
     'Open': 'Open',
     'Closed': 'Gesloten',
+    // View Selector
+    'Go to view': 'Toon locatie',
+    'Close view selector': 'Sluiten weergavekiezer',
+    // Language Selector
+    'Select language': 'Selecteer taal',
 };
 
 export default nl;

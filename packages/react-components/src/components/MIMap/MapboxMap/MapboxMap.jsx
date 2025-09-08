@@ -100,6 +100,7 @@ function MapboxMap({ accessToken, onInitialized, center, zoom, bounds, bearing, 
             bounds: bounds ? [bounds.west, bounds.south, bounds.east, bounds.north] : undefined,
             bearing: bearing ?? 0,
             pitch: pitch ?? 0,
+            useMapsIndoorsMapboxStyle: mapOptions?.mapboxMapStyle ? false : true,
             ...mapOptions
         };
 
@@ -113,9 +114,19 @@ function MapboxMap({ accessToken, onInitialized, center, zoom, bounds, bearing, 
             mapViewOptions.showRoadNameLabels = mapOptions.showRoadNames;
         }
 
+        // If showMapMarkers is not null or undefined, set it as showMapMarkers in the mapViewOptions.
+        if (!isNullOrUndefined(mapOptions?.showMapMarkers)) {
+            mapViewOptions.showMapMarkers = mapOptions.showMapMarkers;
+        }
+        
         const mapView = new window.mapsindoors.mapView.MapboxV3View(mapViewOptions);
 
         setMapViewInstance(mapView);
+
+        // If mapboxMapStyle is not null or undefined and useMapsIndoorsMapboxStyle is false, set it as mapboxMapStyle in the mapView.
+        if (!isNullOrUndefined(mapOptions?.mapboxMapStyle) && !mapViewOptions.useMapsIndoorsMapboxStyle) {
+            mapView.getMap().setStyle(mapOptions.mapboxMapStyle);
+        }
 
         onInitialized(mapView);
     }, []);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from 'react';
 import './LocationDetails.scss';
 import { useTranslation } from 'react-i18next';
 import { ReactComponent as CloseIcon } from '../../assets/close.svg';
@@ -10,7 +10,7 @@ import { usePreventSwipe } from '../../hooks/usePreventSwipe';
 import { snapPoints } from '../../constants/snapPoints';
 import primaryColorState from '../../atoms/primaryColorState';
 import directionsServiceState from '../../atoms/directionsServiceState';
-import useDirectionsInfo from "../../hooks/useDirectionsInfo";
+import useDirectionsInfo from '../../hooks/useDirectionsInfo';
 import travelModeState from '../../atoms/travelModeState';
 import kioskLocationState from '../../atoms/kioskLocationState';
 import accessibilityOnState from '../../atoms/accessibilityOnState';
@@ -28,31 +28,45 @@ LocationDetails.propTypes = {
     onSetSize: PropTypes.func,
     snapPointSwiped: PropTypes.number,
     onStartDirections: PropTypes.func,
-    isOpen: PropTypes.bool
+    isOpen: PropTypes.bool,
+    snapPointSwipedByUser: PropTypes.string
 }
 
 /**
- * Shows details for a MapsIndoors Location.
+ * This component is used to show the details of a MapsIndoors Location.
+ *
+ * It will always show the location name, icon and a info about floor, building and venue.
+ * and a button to start wayfinding.
+ *
+ * It will also show the location description, image, categories and additional details
+ * if they are available.
+ *
+ * In case the Location description is long, it will be truncated and a button to expand the description will be shown.
+ * On small screens, when the description is expanded, the bottom sheet will be expanded to full height. Also, if the user
+ * swipes to full height, the description will be expanded.
  *
  * @param {object} props
  * @param {function} props.onBack - Callback that fires when Location Details are closed by the user.
  * @param {function} props.onStartWayfinding - Callback that fires when user clicks the Start Wayfinding button.
  * @param {function} props.onSetSize - Callback that is fired when the toggle full description button is clicked and the Sheet size changes.
- * @param {number} props.snapPointSwiped - Changes value when user has swiped a Bottom sheet to a new snap point.
  * @param {function} props.onStartDirections - Callback that fires when user clicks the Start directions button.
  * @param {boolean} props.isOpen - Whether the Location Details are open or not.
+ * @param {function} props.snapPointSwipedByUser - Changes value when user has swiped a Bottom sheet to a new snap point.
  *
  */
-function LocationDetails({ onBack, onStartWayfinding, onSetSize, snapPointSwiped, onStartDirections, isOpen }) {
+function LocationDetails({ onBack, onStartWayfinding, onSetSize, onStartDirections, isOpen, snapPointSwipedByUser }) {
     const { t } = useTranslation();
 
     const locationInfoElement = useRef(null);
-    const locationDetailsContainer = useRef(null);
+    const locationDetailsContainerRef = useRef(null);
     const locationDetailsElement = useRef(null);
+    const locationDetailsDetailsRef = useRef(null);
+    const locationImageRef = useRef(null);
 
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [descriptionHasContentAbove, setDescriptionHasContentAbove] = useState(false);
     const [descriptionHasContentBelow, setDescriptionHasContentBelow] = useState(false);
+    const isInFullHeightRef = useRef(false);
 
     // Holds the MapsIndoors DisplayRule for the location
     const [locationDisplayRule, setLocationDisplayRule] = useState(null);
@@ -125,8 +139,10 @@ function LocationDetails({ onBack, onStartWayfinding, onSetSize, snapPointSwiped
     function toggleDescription() {
         if (showFullDescription === false) {
             expandLocationDescription();
+            setSize(snapPoints.MAX);
         } else {
             collapseLocationDescription();
+            setSize(snapPoints.FIT);
         }
     }
 
@@ -137,6 +153,7 @@ function LocationDetails({ onBack, onStartWayfinding, onSetSize, snapPointSwiped
         requestAnimationFrame(() => { // Necessary to preserve transition
             setShowFullDescription(true);
             setScrollIndicators();
+            isInFullHeightRef.current = true;
         });
     }
 
@@ -146,6 +163,7 @@ function LocationDetails({ onBack, onStartWayfinding, onSetSize, snapPointSwiped
     function collapseLocationDescription() {
         setShowFullDescription(false);
         unsetScrollIndicators();
+        isInFullHeightRef.current = false;
     }
 
     /**
@@ -154,12 +172,12 @@ function LocationDetails({ onBack, onStartWayfinding, onSetSize, snapPointSwiped
      */
     function setScrollIndicators() {
         const frameId = requestAnimationFrame(() => {
-            if (locationDetailsContainer.current) {
-                setDescriptionHasContentAbove(locationDetailsContainer.current.scrollTop > 0);
+            if (locationDetailsContainerRef.current) {
+                setDescriptionHasContentAbove(locationDetailsContainerRef.current.scrollTop > 0);
                 setDescriptionHasContentBelow(
-                    locationDetailsContainer.current.scrollTop <
-                    (locationDetailsContainer.current.scrollHeight -
-                        locationDetailsContainer.current.offsetHeight - 1)
+                    locationDetailsContainerRef.current.scrollTop <
+                    (locationDetailsContainerRef.current.scrollHeight -
+                        locationDetailsContainerRef.current.offsetHeight - 1)
                 );
             }
         });
@@ -254,95 +272,165 @@ function LocationDetails({ onBack, onStartWayfinding, onSetSize, snapPointSwiped
      * When user swipes the bottom sheet to a new snap point.
      */
     useEffect(() => {
-        if (snapPointSwiped === undefined) return;
+        if (!snapPointSwipedByUser) {
+            isInFullHeightRef.current = false;
+            return;
+        }
 
         // If swiping to max height, expand location details.
         // If swiping to smaller height, collapse location details.
-        if (showFullDescription) {
+        setShowFullDescription(snapPointSwipedByUser === snapPoints.MAX);
+        if (snapPointSwipedByUser === snapPoints.MAX) {
             expandLocationDescription();
         } else {
             collapseLocationDescription();
         }
-    }, [snapPointSwiped]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [snapPointSwipedByUser]);
 
-    return <div className={`location-details ${descriptionHasContentAbove ? 'location-details--content-above' : ''} ${descriptionHasContentBelow ? 'location-details--content-below' : ''}`}>
+    /**
+     * useLayoutEffect is used here to ensure that DOM measurements (heights) are accurate
+     * before the browser paints. This prevents visual flicker and ensures the modal height
+     * is set correctly based on the rendered content, especially when content or state changes.
+     * This is needed for the gradient scroll indicators to work correctly.
+     * Note: This effect runs only on desktop screens and not on mobile screens.
+     */
+    useLayoutEffect(() => {
+        const modalOpenRef = document.querySelector('.modal.modal--open');
+        if (!modalOpenRef || !locationDetailsDetailsRef?.current || !locationDetailsContainerRef?.current) return;
+
+        // Simplified approach focusing on the location image only
+        const checkHeightAndSetup = () => {
+            const modalHeight = modalOpenRef.offsetHeight;
+            const contentHeight = locationDetailsContainerRef.current.offsetHeight;
+
+            if (modalHeight > 0 && contentHeight > 0) {
+                // Use a relative threshold: content should be at least 90% of modal height to trigger full height
+                const contentToModalRatio = contentHeight / modalHeight;
+                if (contentToModalRatio > 0.9) {
+                    modalOpenRef.style.height = '100%';
+                    setScrollIndicators();
+                } else {
+                    modalOpenRef.style.height = 'auto';
+                }
+            }
+        };
+
+        // Check if the location has an image we need to wait for before calculating heights
+        // Images can significantly affect layout height, and measuring before they load would give incorrect results
+        // This ensures we get accurate contentHeight measurements for proper modal sizing and scroll indicators
+        if (locationImageRef.current) {
+            // If the image is already loaded (from cache), we can proceed immediately with calculations
+            if (locationImageRef.current.complete) {
+                checkHeightAndSetup();
+            } else {
+                // Otherwise, we must wait for the image to load to get accurate height measurements
+                locationImageRef.current.onload = checkHeightAndSetup;
+                locationImageRef.current.onerror = checkHeightAndSetup; // Also handle load failures to ensure we don't block the UI
+            }
+        } else {
+            // No image to wait for, proceed immediately
+            checkHeightAndSetup();
+        }
+
+        // Cleanup function
+        return () => {
+            modalOpenRef.style.height = '';
+            // Clean up any potential event listeners
+            if (locationImageRef.current) {
+                locationImageRef.current.onload = null;
+                locationImageRef.current.onerror = null;
+            }
+        };
+    }, [location, showFullDescription, isOpen, locationAdditionalDetails]);
+
+    return <div className={`location-details ${isInFullHeightRef.current === true ? 'location-details--max-height' : ''} ${descriptionHasContentAbove ? 'location-details--content-above' : ''} ${descriptionHasContentBelow ? 'location-details--content-below' : ''}`}>
         {location && <>
-            <div className="location-info">
-                <div className="location-info__icon">
-                    {locationDisplayRule && <img alt="" src={locationDisplayRule.icon.src ? locationDisplayRule.icon.src : locationDisplayRule.icon} />}
-                </div>
-                <div className="location-info__content">
-                    <div className='location-info__name'>
-                        {location.properties.name}
+            <div className="location-details__header">
+                <div className="location-info">
+                    <div className="location-info__icon">
+                        {locationDisplayRule && <img alt="" src={locationDisplayRule.icon.src ? locationDisplayRule.icon.src : locationDisplayRule.icon} />}
                     </div>
-                    <mi-location-info level={t('Level')} ref={locationInfoElement} show-external-id={showExternalIDs} />
-                </div>
-                <div className="location-info__actions">
-                    <ShareLocationLink buttonClassName="location-info__button" location={location} />
-                    <button className="location-info__button" onClick={() => back()}>
-                        <CloseIcon />
-                    </button>
-                </div>
-            </div>
-
-            {/* Wayfinding Button */}
-            {kioskLocation && isDesktop ? (
-                <button
-                    disabled={!hasFoundRoute}
-                    onClick={() => startDirections()}
-                    className={`location-details__wayfinding ${!hasFoundRoute ? 'location-details--no-route' : ''}`}
-                    style={{ background: primaryColor }}
-                >
-                    {!hasFoundRoute ? t('Directions not available') : t('Start directions')}
-                </button>
-            ) : (
-                <button
-                    onClick={() => startWayfinding()}
-                    style={{ background: primaryColor }}
-                    className="location-details__wayfinding"
-                >
-                    {t('Start wayfinding')}
-                </button>
-            )}
-
-            <div ref={locationDetailsContainer} onScroll={e => setScrollIndicators(e)} className="location-details__details prevent-scroll" {...scrollableContentSwipePrevent}>
-                {/* Location image */}
-                {location.properties.imageURL && <img alt="" src={location.properties.imageURL} className="location-details__image" />}
-
-                {/* Location categories */}
-                {Object.keys(location.properties.categories).length > 0 && <p className="location-details__categories">
-                    {Object.values(location.properties.categories).map((category, index, array) => {
-                        return <React.Fragment key={category}>{category}{index < array.length - 1 && <>・</>}</React.Fragment>
-                    })}
-                </p>}
-                {/* Location description */}
-                {location.properties.description && (
-                    <section className={`location-details__description ${showFullDescription ? 'location-details__description--full' : ''}`}>
-                        <div ref={locationDetailsElement}>
-                            {location.properties.description}
+                    <div className="location-info__content">
+                        <div className="location-info__name">
+                            {location.properties.name}
                         </div>
-                        {(isOverflowing || initialOverflow || showFullDescription) && (
-                            <button onClick={() => toggleDescription()}>
-                                {t(showFullDescription ? 'Close' : 'Read full description')}
-                            </button>
-                        )}
-                    </section>
-                )}
+                        <mi-location-info level={t('Level')} ref={locationInfoElement} show-external-id={showExternalIDs} />
+                    </div>
+                    <div className="location-info__actions">
+                        <ShareLocationLink buttonClassName="location-info__button" location={location} />
+                        <button className="location-info__button" onClick={() => back()}>
+                            <CloseIcon />
+                        </button>
+                    </div>
+                </div>
 
-                {/*Contact action / opening hours button container */}
-                {locationAdditionalDetails && <div className='contact-action-buttons-container'>
-                    {locationAdditionalDetails.map(button => (
-                        <ContactActionButton
-                            key={button.key}
-                            detailType={button.detailType}
-                            active={button.active}
-                            displayText={button.displayText}
-                            value={button.value}
-                            icon={button.icon}
-                        />
-                    ))}
-                    {openingHours && <OpeningHours openingHours={openingHours} />}
-                </div>}
+                {/* Wayfinding Button */}
+                {kioskLocation && isDesktop ? (
+                    <button
+                        disabled={!hasFoundRoute}
+                        onClick={() => startDirections()}
+                        className={`location-details__wayfinding ${!hasFoundRoute ? 'location-details--no-route' : ''}`}
+                        style={{ background: primaryColor }}
+                    >
+                        {!hasFoundRoute ? t('Directions not available') : t('Start directions')}
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => startWayfinding()}
+                        style={{ background: primaryColor }}
+                        className="location-details__wayfinding"
+                    >
+                        {t('Start wayfinding')}
+                    </button>
+                )}
+            </div>
+            <div
+                className="location-details__details prevent-scroll"
+                {...scrollableContentSwipePrevent}
+                ref={locationDetailsDetailsRef}
+            >
+                <div
+                    ref={locationDetailsContainerRef}
+                    onScroll={e => setScrollIndicators(e)}
+                    className="location-details__details-content">
+                    {/* Location image */}
+                    {location.properties.imageURL && <img ref={locationImageRef} alt="" src={location.properties.imageURL} className="location-details__image" />}
+
+                    {/* Location categories */}
+                    {Object.keys(location.properties.categories).length > 0 && <p className="location-details__categories">
+                        {Object.values(location.properties.categories).map((category, index, array) => {
+                            return <React.Fragment key={category}>{category}{index < array.length - 1 && <>・</>}</React.Fragment>
+                        })}
+                    </p>}
+                    {/* Location description */}
+                    {location.properties.description && (
+                        <section className={`location-details__description ${showFullDescription ? 'location-details__description--full' : ''}`}>
+                            <div ref={locationDetailsElement}>
+                                {location.properties.description}
+                            </div>
+                            {(isOverflowing || initialOverflow || showFullDescription) && (
+                                <button onClick={() => toggleDescription()}>
+                                    {t(showFullDescription ? 'Close' : 'Read full description')}
+                                </button>
+                            )}
+                        </section>
+                    )}
+
+                    {/*Contact action / opening hours button container */}
+                    {locationAdditionalDetails && <div className="contact-action-buttons-container">
+                        {locationAdditionalDetails.map(button => (
+                            <ContactActionButton
+                                key={button.key}
+                                detailType={button.detailType}
+                                active={button.active}
+                                displayText={button.displayText}
+                                value={button.value}
+                                icon={button.icon}
+                            />
+                        ))}
+                        {openingHours && <OpeningHours openingHours={openingHours} onExpand={() => setScrollIndicators()} />}
+                    </div>}
+                </div>
             </div>
         </>}
     </div>

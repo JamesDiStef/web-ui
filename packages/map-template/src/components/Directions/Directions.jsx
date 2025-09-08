@@ -1,31 +1,31 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from 'react';
 import './Directions.scss';
 import { useTranslation } from 'react-i18next';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import mapsIndoorsInstanceState from '../../atoms/mapsIndoorsInstanceState';
 import travelModeState from '../../atoms/travelModeState';
 import { ReactComponent as QRCode } from '../../assets/qrcode.svg';
-import RouteInstructions from "../RouteInstructions/RouteInstructions";
-import directionsResponseState from "../../atoms/directionsResponseState";
-import activeStepState from "../../atoms/activeStep";
-import { snapPoints } from "../../constants/snapPoints";
-import substepsToggledState from "../../atoms/substepsToggledState";
+import RouteInstructions from '../RouteInstructions/RouteInstructions';
+import directionsResponseState from '../../atoms/directionsResponseState';
+import activeStepState from '../../atoms/activeStep';
+import { snapPoints } from '../../constants/snapPoints';
+import substepsToggledState from '../../atoms/substepsToggledState';
 import currentLocationState from '../../atoms/currentLocationState';
-import getDesktopPaddingLeft from "../../helpers/GetDesktopPaddingLeft";
-import getMobilePaddingBottom from "../../helpers/GetMobilePaddingBottom";
-import getDesktopPaddingBottom from "../../helpers/GetDesktopPaddingBottom";
-import kioskLocationState from "../../atoms/kioskLocationState";
+import getDesktopPaddingLeft from '../../helpers/GetDesktopPaddingLeft';
+import getMobilePaddingBottom from '../../helpers/GetMobilePaddingBottom';
+import getDesktopPaddingBottom from '../../helpers/GetDesktopPaddingBottom';
+import kioskLocationState from '../../atoms/kioskLocationState';
 import qrCodeLinkState from '../../atoms/qrCodeLinkState';
-import Accessibility from "../Accessibility/Accessibility";
-import isDestinationStepState from "../../atoms/isDestinationStepState";
-import primaryColorState from "../../atoms/primaryColorState";
-import { useIsKioskContext } from "../../hooks/useIsKioskContext";
-import { useIsDesktop } from "../../hooks/useIsDesktop";
+import Accessibility from '../Accessibility/Accessibility';
+import isDestinationStepState from '../../atoms/isDestinationStepState';
+import primaryColorState from '../../atoms/primaryColorState';
+import { useIsKioskContext } from '../../hooks/useIsKioskContext';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 import showExternalIDsState from '../../atoms/showExternalIDsState';
-import PropTypes from "prop-types";
+import PropTypes from 'prop-types';
 import baseLinkSelector from '../../selectors/baseLink';
-import mapTypeState from "../../atoms/mapTypeState";
-import { ZoomLevelValues } from "../../constants/zoomLevelValues";
+import mapTypeState from '../../atoms/mapTypeState';
+import { ZoomLevelValues } from '../../constants/zoomLevelValues';
 
 let directionsRenderer;
 
@@ -33,8 +33,8 @@ Directions.propTypes = {
     isOpen: PropTypes.bool,
     onBack: PropTypes.func,
     onSetSize: PropTypes.func,
-    snapPointSwiped: PropTypes.func,
-    onRouteFinished: PropTypes.func
+    onRouteFinished: PropTypes.func,
+    snapPointSwipedByUser: PropTypes.string
 };
 
 /**
@@ -44,12 +44,13 @@ Directions.propTypes = {
  * @param {boolean} props.isOpen - Indicates if the directions view is open.
  * @param {function} props.onBack - Callback that fires when the directions view is closed by the user.
  * @param {function} props.onSetSize - Callback that is fired when the component has loaded.
- * @param {function} props.snapPointSwiped - Changes value when user has swiped a Bottom sheet to a new snap point.
  * @param {function} props.onRouteFinished - Callback that fires when the route has finished.
+ * @param {string} props.snapPointSwipedByUser - Changes value when user has swiped a Bottom sheet to a new snap point.
  *
  */
-function Directions({ isOpen, onBack, onSetSize, snapPointSwiped, onRouteFinished }) {
+function Directions({ isOpen, onBack, onSetSize, onRouteFinished, snapPointSwipedByUser }) {
     const { t } = useTranslation();
+    const requestAnimationFrameId = useRef();
 
     // Holds the MapsIndoors DisplayRule for the destination
     const [destinationDisplayRule, setDestinationDisplayRule] = useState(null);
@@ -241,8 +242,8 @@ function Directions({ isOpen, onBack, onSetSize, snapPointSwiped, onRouteFinishe
 
     /**
      * Sets minZoom for a specific map provider.
-     * 
-     * @param {number} zoomLevel 
+     *
+     * @param {number} zoomLevel
      */
     function setMinZoom(zoomLevel) {
         if (mapType === 'mapbox') {
@@ -260,7 +261,7 @@ function Directions({ isOpen, onBack, onSetSize, snapPointSwiped, onRouteFinishe
         resetSubsteps();
         stopRendering();
         onBack();
-        
+
     }
 
     /**
@@ -285,17 +286,25 @@ function Directions({ isOpen, onBack, onSetSize, snapPointSwiped, onRouteFinishe
      * Set the size of the bottom sheet depending on the substepsOpen state.
      */
     useEffect(() => {
-        substepsOpen ? setSize(snapPoints.MAX) : setSize(snapPoints.FIT);
+        requestAnimationFrameId.current = requestAnimationFrame(() => {// we use a requestAnimationFrame to ensure that the component has been re-rendered with the collapsed or expanded sub steps before we set the size
+            substepsOpen ? setSize(snapPoints.MAX) : setSize(snapPoints.FIT);
+        });
+
+        return () => {
+            if (requestAnimationFrameId.current) {
+                cancelAnimationFrame(requestAnimationFrameId.current);
+            }
+        }
     }, [substepsOpen]);
 
     /**
      * When user swipes the bottom sheet to a new snap point.
      */
     useEffect(() => {
-        if (isOpen && snapPointSwiped) {
-            setSubstepsOpen(snapPointSwiped === snapPoints.MAX);
+        if (isOpen && snapPointSwipedByUser) {
+            setSubstepsOpen(snapPointSwipedByUser === snapPoints.MAX);
         }
-    }, [isOpen, snapPointSwiped]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isOpen, snapPointSwipedByUser]);
 
     return (
         <div className="directions" style={{ display: !isKioskContext ? 'grid' : 'block' }}>

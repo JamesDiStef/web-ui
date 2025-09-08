@@ -130,7 +130,7 @@ Note that when using the React component, the properties should conform to JSX p
 |`pitch`|`pitch`|`number`|The pitch (Mapbox) or tilt (Google) value of the map. The value of the pitch can be between 0-85 degrees on a Mapbox map. |
 |`bearing`|`bearing`|`number`|The bearing (Mapbox) or heading (Google) value of the map. It accepts any value, and will modify it to fit into the range [0, 360]. |
 |`use-map-provider-module`|`useMapProviderModule`| Set to true if the Map Template should take MapsIndoors solution modules into consideration when determining what map type to use. |
-|`language`|`language`|`string`|The language to show textual content in. Supported values are "en" for English, "da" for Danish, "de" for German, "fr" for French, "it" for Italian, "es" for Spanish and "nl" for Dutch. If the prop is not set, the language of the browser will be used (if it is one of the supported languages - otherwise it will default to English). |
+|`language`|`language`|`string`|The language to show textual content in. Supported values are "en" for English, "da" for Danish, "de" for German, "fr" for French, "it" for Italian, "es" for Spanish, "nl" for Dutch and "zh" for Chinese. If the prop is not set, the language of the browser will be used (if it is one of the supported languages - otherwise it will default to English). |
 |`kiosk-origin-location-id`|`kioskOriginLocationId`|`string`|If running the Map Template as a Kiosk, provide the Location ID that represents the location of the Kiosk. |
 |`timeout`|`timeout`|`number`|If you want the Map Template to reset the map position and the UI elements to the initial state after some time of inactivity, use this to specify the number of seconds of inactivity before resetting. This property is not dependent on the `kioskOriginLocationId`. |
 |`use-keyboard`|`useKeyboard`|`bool`|If running the Map Template as a Kiosk, set this prop to `true` and it will display a virtual keyboard. This property is dependent on the `kioskOriginLocationId`. |
@@ -142,6 +142,8 @@ Note that when using the React component, the properties should conform to JSX p
 |`show-external-ids`|`showExternalIDs`|`bool`|Determine whether the location details on the map should have an external ID visible. The default value is set to false. |
 |`search-external-locations`|`searchExternalLocations`|`bool`|If you want to perform search for external locations in the Wayfinding mode. If set to true, Mapbox/Google places will be displayed depending on the Map Provider you are using. If set to false, the results returned will only be MapsIndoors results. The default is true. |
 |`center`|`center`|`string`|Specifies the coordinates where the map should load, represented as latitude and longitude values separated by a comma. If the specified coordinates intersect with a Venue, that Venue will be set as the current Venue. |
+|`use-app-title`|`useAppTitle`|`boolean`| Specifies if the Map Template should set the document title as defined in the App Config. |
+|`show-map-markers`|`showMapMarkers`|`boolean`| Specifies if the base map-specific markers are shown or not. |
 
 ## Using Query Parameters
 
@@ -166,7 +168,7 @@ The supported query parameters are the following:
 15. `pitch` - Used like this `pitch=30`. Not compatible with MapsIndoors 2D models and MapsIndoors labels on Google Maps. The value of the pitch can be between 0-85 degrees on a Mapbox map.
 16. `bearing` - Used like this `bearing=180`. Not compatible with MapsIndoors 2D models and MapsIndoors labels on Google Maps.  It accepts any value, and will modify it to fit into the range [0, 360].
 17. `useMapProviderModule` - Set to "true" if the Map Template should take MapsIndoors solution modules into consideration when determining what map type to use.
-18. `language` - The language to show textual content in. Supported values are "en" for English, "da" for Danish, "de" for German, "fr" for French, "it" for Italian and "es" for Spanish. If the prop is not set, the language of the browser will be used (if it is one of the supported languages - otherwise it will default to English).
+18. `language` - The language to show textual content in. Supported values are "en" for English, "da" for Danish, "de" for German, "fr" for French, "it" for Italian, "es" for Spanish, "nl" for Dutch and "zh" for Chinese. If the prop is not set, the language of the browser will be used (if it is one of the supported languages - otherwise it will default to English).
 19. `kioskOriginLocationId` - If running the Map Template as a Kiosk, provide the Location ID that represents the location of the Kiosk.
 20. `timeout` - If you want the Map Template to reset the map position and the UI elements to the initial state after some time of inactivity, use this to specify the number of seconds of inactivity before resetting. This property is not dependent on the `kioskOriginLocationId`.
 21. `useKeyboard` -  If running the Map Template as a Kiosk, set this prop to `true` and it will display a virtual keyboard. This property is dependent on the `kioskOriginLocationId`.
@@ -178,6 +180,8 @@ The supported query parameters are the following:
 27. `showExternalIDs` - Determine whether the location details on the map should have an external ID visible. The default value is set to false.
 28. `searchExternalLocations` - If you want to perform search for external locations in the Wayfinding mode. If set to true, Mapbox/Google places will be displayed depending on the Map Provider you are using. If set to false, the results returned will only be MapsIndoors results. The default is true.
 29. `center` - Specifies the coordinates where the map should load, represented as latitude and longitude values separated by a comma. If the specified coordinates intersect with a Venue, that Venue will be set as the current Venue.
+30. `useAppTitle` - Specifies if the Map Template should set the document title as defined in the App Config.
+31. `showMapMarkers` - Specifies if the base map-specific markers are shown or not.
 
 **Note!** All the query parameters need to be separated with the `&` symbol, without any spaces in between.
 **Note!** When using parameters such as `directionsTo`, `directionsFrom`, `locationId`, `externalIDs`, and `tileStyle` make sure you are using the correct `apiKey` parameter to which they belong.

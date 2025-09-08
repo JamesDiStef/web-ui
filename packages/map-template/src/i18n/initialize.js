@@ -7,6 +7,7 @@ import fr from './fr.js';
 import it from './it.js';
 import es from './es.js';
 import nl from './nl.js';
+import zh from './zh.js';
 
 export default function initI18n(language) {
     i18n
@@ -24,15 +25,18 @@ export default function initI18n(language) {
                 },
                 fr: {
                     translation: fr
-                }, 
+                },
                 it: {
                     translation: it
-                }, 
+                },
                 es: {
                     translation: es
-                }, 
+                },
                 nl: {
                     translation: nl
+                },
+                zh: {
+                    translation: zh
                 }
             },
             lng: language,
@@ -42,3 +46,14 @@ export default function initI18n(language) {
             }
         });
 }
+// Update the supported languages list if you add new languages to the i18n initialization
+export const supportedLanguages = [
+    { code: 'en', label: 'English' },
+    { code: 'da', label: 'Dansk' },
+    { code: 'de', label: 'Deutsch' },
+    { code: 'fr', label: 'Français' },
+    { code: 'it', label: 'Italiano' },
+    { code: 'es', label: 'Español' },
+    { code: 'nl', label: 'Nederlands' },
+    { code: 'zh', label: '中文' },
+];

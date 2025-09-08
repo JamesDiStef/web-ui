@@ -1,8 +1,7 @@
-import * as Sentry from "@sentry/react";
-import { useRecoilValue } from "recoil";
-import primaryColorState from "../../atoms/primaryColorState";
+import { useRecoilValue } from 'recoil';
+import primaryColorState from '../../atoms/primaryColorState';
 import './SplashScreen.scss';
-import logoState from "../../atoms/logoState";
+import logoState from '../../atoms/logoState';
 
 /**
  * Creates the splash screen loading initially in the app.
@@ -15,9 +14,9 @@ function SplashScreen() {
     return (
         <div className="splash-screen">
             <div className="splash-screen__container">
-                <img className="splash-screen__logo"
+                <img className={'splash-screen__logo ' + (logo ? 'splash-screen__logo--visible' : '')}
                     src={logo}
-                    alt="logo"
+                    alt=""
                 />
                 {/* The border value is set based on the #rrggbbaa and includes an
                         opacity level of around 20%, which translates to the value of 33. */}
@@ -32,4 +31,4 @@ function SplashScreen() {
     )
 }
 
-export default Sentry.withProfiler(SplashScreen, { name: "SplashScreen" });
+export default SplashScreen;
