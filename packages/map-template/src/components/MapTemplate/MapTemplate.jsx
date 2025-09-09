@@ -221,6 +221,41 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     const finishRoute = useOnRouteFinished();
     const [, setErrorMessage] = useRecoilState(notificationMessageState);
 
+    // 1. State to track the Sidebar's position on the screen
+    const [sidebarPosition, setSidebarPosition] = useState({ x: 100, y: 100 });
+
+    // 2. State to track whether the user is currently dragging the Sidebar
+    const [dragging, setDragging] = useState(false);
+
+    // 3. Ref to store the offset between the pointer and the Sidebar's top-left corner when dragging starts
+    const dragOffset = useRef({ x: 0, y: 0 });
+
+    // 4. Handler for when the user starts dragging (pointer down)
+    function handlePointerDown(e) {
+        setDragging(true); // Set dragging state to true
+        // Calculate the offset between pointer and Sidebar's position
+        dragOffset.current = {
+            x: e.clientX - sidebarPosition.x,
+            y: e.clientY - sidebarPosition.y
+        };
+    }
+
+    // 5. Handler for when the user moves the pointer (while dragging)
+    function handlePointerMove(e) {
+        if (dragging) {
+            // Update Sidebar position based on pointer movement and initial offset
+            setSidebarPosition({
+                x: e.clientX - dragOffset.current.x,
+                y: e.clientY - dragOffset.current.y
+            });
+        }
+    }
+
+    // 6. Handler for when the user releases the pointer (drag ends)
+    function handlePointerUp() {
+        setDragging(false); // Stop dragging
+    }
+
     /**
      * Ensure that MapsIndoors Web SDK is available.
      *
@@ -788,9 +823,9 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
         {qrCodeLink && <QRCodeDialog />}
         {showLegendDialog && <LegendDialog />}
         {isMapPositionInvestigating &&
-            <Fragment key={resetCount}>
-                {isDesktop &&
-                    (!isMaximized ? (
+        <Fragment key={resetCount}>
+          {isDesktop &&
+            (!isMaximized ? (
               <>
                 <button
                   style={{
@@ -806,14 +841,32 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
                 >
                   Click to expand
                 </button>
-                <Sidebar
-                  directionsFromLocation={directionsFromLocation}
-                  directionsToLocation={directionsToLocation}
-                  pushAppView={pushAppView}
-                  currentAppView={currentAppView}
-                  appViews={appStates}
-                  onRouteFinished={() => resetStateAndUI()}
-                />
+                <div
+                  // 7. This div wraps the Sidebar and makes it draggable
+                  style={{
+                    position: "absolute", // Allows manual positioning
+                    left: sidebarPosition.x, // X position from state
+                    top: sidebarPosition.y, // Y position from state
+                    zIndex: 1100, // Ensure it's above other elements
+                    cursor: dragging ? "grabbing" : "grab", // Visual feedback for dragging
+                    userSelect: "none", // Prevents text selection while dragging
+                    height: "80vh",
+                    width: "300px",
+                  }}
+                  onPointerDown={handlePointerDown} // Start dragging
+                  onPointerMove={handlePointerMove} // Move Sidebar
+                  onPointerUp={handlePointerUp} // Stop dragging
+                  onPointerLeave={handlePointerUp} // Stop dragging if pointer leaves area
+                >
+                  <Sidebar
+                    directionsFromLocation={directionsFromLocation}
+                    directionsToLocation={directionsToLocation}
+                    pushAppView={pushAppView}
+                    currentAppView={currentAppView}
+                    appViews={appStates}
+                    onRouteFinished={() => resetStateAndUI()}
+                  />
+                </div>
               </>
             ) : (
               <>
@@ -834,18 +887,18 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
                 {/* <Search isOpen={currentAppView === appViews.SEARCH} />{" "} */}
               </>
             ))}
-                
+
                 {!isDesktop &&
-                    <BottomSheet
-                        directionsFromLocation={directionsFromLocation}
-                        directionsToLocation={directionsToLocation}
-                        pushAppView={pushAppView}
-                        currentAppView={currentAppView}
-                        appViews={appStates}
-                        onRouteFinished={() => onRouteFinish()}
-                    />
+            <BottomSheet
+              directionsFromLocation={directionsFromLocation}
+              directionsToLocation={directionsToLocation}
+              pushAppView={pushAppView}
+              currentAppView={currentAppView}
+              appViews={appStates}
+              onRouteFinished={() => onRouteFinish()}
+            />
                 }
-            </Fragment>
+        </Fragment>
         }
         <MapWrapper
             useMapProviderModule={useMapProviderModule}
