@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import currentLocationState from '../../atoms/currentLocationState';
 import filteredLocationsByExternalIDState from '../../atoms/filteredLocationsByExternalIDState';
@@ -43,6 +43,7 @@ function Sidebar({ directionsFromLocation, directionsToLocation, pushAppView, cu
     const [filteredLocationsByExternalIDs, setFilteredLocationsByExternalID] = useRecoilState(filteredLocationsByExternalIDState);
     const [, setLocationId] = useRecoilState(locationIdState);
     const kioskLocation = useRecoilValue(kioskLocationState)
+    const [isShowing, setIsShowing] = useState(true);
 
     /*
      * React on changes on the current location and directions locations and set relevant bottom sheet.
@@ -141,10 +142,18 @@ function Sidebar({ directionsFromLocation, directionsToLocation, pushAppView, cu
         </Modal>
     ];
 
+    function toggleModal(){
+        setIsShowing(!isShowing);
+    }
+
     return (
-        <div>
-            {pages}
-        </div>
+        <>
+            <button onClick={() => toggleModal()}>Minus</button>
+            {isShowing && <div>
+                {pages}
+            </div>}
+        </>
+        
     )
 }
 

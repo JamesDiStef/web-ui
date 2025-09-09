@@ -176,8 +176,6 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     const [, setWayfindingLocation] = useRecoilState(wayfindingLocationState);
     const qrCodeLink = useRecoilValue(qrCodeLinkState)
 
-    const [isMaximized, setIsMaximized] = useState(false);
-
     const [showVenueSelector, setShowVenueSelector] = useState(true);
     const [showPositionControl, setShowPositionControl] = useState(true);
 
@@ -825,22 +823,8 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
         {isMapPositionInvestigating &&
         <Fragment key={resetCount}>
           {isDesktop &&
-            (!isMaximized ? (
+            (
               <>
-                <button
-                  style={{
-                    color: "blue",
-                    height: "40px",
-                    width: "120px",
-                    position: "absolute",
-                    right: "20px",
-                    top: "20px",
-                    zIndex: 1000,
-                  }}
-                  onClick={() => setIsMaximized(true)}
-                >
-                  Click to expand
-                </button>
                 <div
                   // 7. This div wraps the Sidebar and makes it draggable
                   style={{
@@ -868,25 +852,7 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
                   />
                 </div>
               </>
-            ) : (
-              <>
-                <button
-                  style={{
-                    color: "blue",
-                    height: "40px",
-                    width: "120px",
-                    position: "absolute",
-                    right: "20px",
-                    top: "20px",
-                    zIndex: 1000,
-                  }}
-                  onClick={() => setIsMaximized(false)}
-                >
-                  Click to collapse
-                </button>
-                {/* <Search isOpen={currentAppView === appViews.SEARCH} />{" "} */}
-              </>
-            ))}
+            )}
 
                 {!isDesktop &&
             <BottomSheet
