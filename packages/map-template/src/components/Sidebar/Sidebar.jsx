@@ -112,7 +112,7 @@ function Sidebar({ directionsFromLocation, directionsToLocation, pushAppView, cu
     }
 
     const pages = [
-        <Modal isOpen={currentAppView === appViews.SEARCH} key="SEARCH">
+        <Modal isOpen={currentAppView === appViews.SEARCH} key="SEARCH" wayfinderLocation={wayfinderLocation}>
             <Search isOpen={currentAppView === appViews.SEARCH} />
         </Modal>,
         <Modal isOpen={currentAppView === appViews.EXTERNALIDS} key="EXTERNALIDS">
@@ -122,7 +122,7 @@ function Sidebar({ directionsFromLocation, directionsToLocation, pushAppView, cu
                 onLocationClick={(location) => setCurrentLocation(location)}
             />
         </Modal>,
-        <Modal isOpen={currentAppView === appViews.LOCATION_DETAILS} key="LOCATION_DETAILS">
+        <Modal isOpen={currentAppView === appViews.LOCATION_DETAILS} key="LOCATION_DETAILS" wayfinderLocation={wayfinderLocation}>
             <LocationDetails
                 onStartWayfinding={() => pushAppView(appViews.WAYFINDING)}
                 onBack={() => closeLocationDetails()}
@@ -130,7 +130,7 @@ function Sidebar({ directionsFromLocation, directionsToLocation, pushAppView, cu
                 isOpen={currentAppView === appViews.LOCATION_DETAILS}
             />
         </Modal>,
-        <Modal isOpen={currentAppView === appViews.WAYFINDING} key="WAYFINDING">
+        <Modal isOpen={currentAppView === appViews.WAYFINDING} key="WAYFINDING" wayfinderLocation={wayfinderLocation}>
             <Wayfinding
                 onStartDirections={() => pushAppView(appViews.DIRECTIONS)}
                 directionsToLocation={directionsToLocation}
@@ -139,7 +139,7 @@ function Sidebar({ directionsFromLocation, directionsToLocation, pushAppView, cu
                 isActive={currentAppView === appViews.WAYFINDING}
             />
         </Modal>,
-        <Modal isOpen={currentAppView === appViews.DIRECTIONS} key="DIRECTIONS">
+        <Modal isOpen={currentAppView === appViews.DIRECTIONS} key="DIRECTIONS" wayfinderLocation={wayfinderLocation}>
             <Directions
                 isOpen={currentAppView === appViews.DIRECTIONS}
                 onBack={() => closeDirections()}

@@ -828,53 +828,55 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
         {showLegendDialog && <LegendDialog />}
         {isMapPositionInvestigating &&
         <Fragment key={resetCount}>
-          {isDesktop &&
-            (
-              <>
-                {isDraggable && <div
-                  // 7. This div wraps the Sidebar and makes it draggable
-                  style={{
-                    position: "absolute", // Allows manual positioning
-                    left: sidebarPosition.x, // X position from state
-                    top: sidebarPosition.y, // Y position from state
-                    zIndex: 1100, // Ensure it's above other elements
-                    cursor: dragging ? "grabbing" : "grab", // Visual feedback for dragging
-                    userSelect: "none", // Prevents text selection while dragging
-                    height: "80vh",
-                    width: "300px",
-                  }}
-                  onPointerDown={handlePointerDown} // Start dragging
-                  onPointerMove={handlePointerMove} // Move Sidebar
-                  onPointerUp={handlePointerUp} // Stop dragging
-                  onPointerLeave={handlePointerUp} // Stop dragging if pointer leaves area
-                >
-                  <Sidebar
-                    directionsFromLocation={directionsFromLocation}
-                    directionsToLocation={directionsToLocation}
-                    pushAppView={pushAppView}
-                    currentAppView={currentAppView}
-                    appViews={appStates}
-                    onRouteFinished={() => resetStateAndUI()}
-                    wayfinderLocation={wayfindingLocation}
-                    isDraggable={isDraggable}
-                    isHideable={isHideable}
-                  />
-                </div>}: 
-                <Sidebar
-                    directionsFromLocation={directionsFromLocation}
-                    directionsToLocation={directionsToLocation}
-                    pushAppView={pushAppView}
-                    currentAppView={currentAppView}
-                    appViews={appStates}
-                    onRouteFinished={() => resetStateAndUI()}
-                    wayfinderLocation={wayfindingLocation}
-                    isDraggable={isDraggable}
-                    isHideable={isHideable}
-                  />
-              </>
-            )}
+            {isDesktop && (
+                <>
+                    {isDraggable ? (
+                    <div
+                        style={{
+                        position: "absolute",
+                        left: sidebarPosition.x,
+                        top: sidebarPosition.y,
+                        zIndex: 1100,
+                        cursor: dragging ? "grabbing" : "grab",
+                        userSelect: "none",
+                        height: "80vh",
+                        width: "300px",
+                        }}
+                        onPointerDown={handlePointerDown}
+                        onPointerMove={handlePointerMove}
+                        onPointerUp={handlePointerUp}
+                        onPointerLeave={handlePointerUp}
+                    >
+                        <Sidebar
+                        directionsFromLocation={directionsFromLocation}
+                        directionsToLocation={directionsToLocation}
+                        pushAppView={pushAppView}
+                        currentAppView={currentAppView}
+                        appViews={appStates}
+                        onRouteFinished={() => resetStateAndUI()}
+                        wayfinderLocation={wayfindingLocation}
+                        isDraggable={isDraggable}
+                        isHideable={isHideable}
+                        />
+                    </div>
+                    ) : (
+                    <Sidebar
+                        directionsFromLocation={directionsFromLocation}
+                        directionsToLocation={directionsToLocation}
+                        pushAppView={pushAppView}
+                        currentAppView={currentAppView}
+                        appViews={appStates}
+                        onRouteFinished={() => resetStateAndUI()}
+                        wayfinderLocation={wayfindingLocation}
+                        isDraggable={isDraggable}
+                        isHideable={isHideable}
+                    />
+                    )}
+                </>
+                )}
+                    
 
-                {!isDesktop &&
+        {!isDesktop &&
             <BottomSheet
               directionsFromLocation={directionsFromLocation}
               directionsToLocation={directionsToLocation}

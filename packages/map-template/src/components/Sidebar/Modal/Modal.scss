@@ -52,4 +52,33 @@ $desktop-breakpoint: 992px;
         min-height: 0;
         box-sizing: border-box;
     }
+
+    &.topleft {
+        top: 10px;
+        left: 10px;
+        right: auto;
+        bottom: auto;
+        z-index: var(--z-index-dropdown);
+    }
+    &.topright {
+        top: 10px;
+        right: 10px;
+        left: auto;
+        bottom: auto;
+        z-index: var(--z-index-dropdown);
+    }
+    &.bottomleft {
+        bottom: 10px;
+        left: 10px;
+        top: auto;
+        right: auto;
+        z-index: var(--z-index-dropdown);
+    }
+    &.bottomright {
+        bottom: 10px;
+        right: 10px;
+        top: auto;
+        left: auto;
+        z-index: var(--z-index-dropdown);
+    }
 }
