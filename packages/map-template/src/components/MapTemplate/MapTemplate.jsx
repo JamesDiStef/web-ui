@@ -100,7 +100,10 @@ MapTemplate.propTypes = {
     center: PropTypes.string,
     useAppTitle: PropTypes.bool,
     showMapMarkers: PropTypes.bool,
-    mapboxMapStyle: PropTypes.string
+    mapboxMapStyle: PropTypes.string,
+    wayfindingLocation: PropTypes.string,
+    isDraggable: PropTypes.bool,
+    isHideable: PropTypes.bool
 };
 
 /**
@@ -138,8 +141,11 @@ MapTemplate.propTypes = {
  * @param {boolean} [props.useAppTitle] - Specifies if the Map Template should set the document title as defined in the App Config. The default value is set to false.
  * @param {boolean} [props.showMapMarkers] - Specifies if the Map Template should show the base map providers Map Markers. The default value is set to true.
  * @param {string} [props.mapboxMapStyle] - Specifies the Mapbox Map Style to use. The default value is set to "mapbox://styles/mapbox/standard".
+ * @param {string} [props.wayfinderLocation] - Specifies where the wayfinder renders - default to top left.  other options include topright, bottomleft, or bottomright.
+ * @param {boolean} [props.isDraggable] - specifies if the sidebar is draggable or not - default is false
+ * @param {boolean} [props.isHideable] - specifies if the sidebar is collapsable or not - default is false.
  */
-function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, primaryColor, logo, appUserRoles, directionsFrom, directionsTo, externalIDs, tileStyle, startZoomLevel, bearing, pitch, gmMapId, useMapProviderModule, kioskOriginLocationId, language, supportsUrlParameters, useKeyboard, timeout, miTransitionLevel, category, searchAllVenues, hideNonMatches, showRoadNames, showExternalIDs, searchExternalLocations, center, useAppTitle, showMapMarkers, mapboxMapStyle }) {
+function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, primaryColor, logo, appUserRoles, directionsFrom, directionsTo, externalIDs, tileStyle, startZoomLevel, bearing, pitch, gmMapId, useMapProviderModule, kioskOriginLocationId, language, supportsUrlParameters, useKeyboard, timeout, miTransitionLevel, category, searchAllVenues, hideNonMatches, showRoadNames, showExternalIDs, searchExternalLocations, center, useAppTitle, showMapMarkers, mapboxMapStyle, wayfindingLocation, isDraggable, isHideable }) {
 
     const [userSelectedLanguage, setUserSelectedLanguage] = useState(false);
     const [mapOptions, setMapOptions] = useState({ brandingColor: primaryColor });
@@ -220,7 +226,7 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
     const [, setErrorMessage] = useRecoilState(notificationMessageState);
 
     // 1. State to track the Sidebar's position on the screen
-    const [sidebarPosition, setSidebarPosition] = useState({ x: 100, y: 100 });
+    const [sidebarPosition, setSidebarPosition] = useState({ x: 10, y: 10 });
 
     // 2. State to track whether the user is currently dragging the Sidebar
     const [dragging, setDragging] = useState(false);
@@ -825,7 +831,7 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
           {isDesktop &&
             (
               <>
-                <div
+                {isDraggable && <div
                   // 7. This div wraps the Sidebar and makes it draggable
                   style={{
                     position: "absolute", // Allows manual positioning
@@ -849,8 +855,22 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
                     currentAppView={currentAppView}
                     appViews={appStates}
                     onRouteFinished={() => resetStateAndUI()}
+                    wayfinderLocation={wayfindingLocation}
+                    isDraggable={isDraggable}
+                    isHideable={isHideable}
                   />
-                </div>
+                </div>}: 
+                <Sidebar
+                    directionsFromLocation={directionsFromLocation}
+                    directionsToLocation={directionsToLocation}
+                    pushAppView={pushAppView}
+                    currentAppView={currentAppView}
+                    appViews={appStates}
+                    onRouteFinished={() => resetStateAndUI()}
+                    wayfinderLocation={wayfindingLocation}
+                    isDraggable={isDraggable}
+                    isHideable={isHideable}
+                  />
               </>
             )}
 

@@ -19,7 +19,10 @@ Sidebar.propTypes = {
     currentAppView: PropTypes.string,
     appViews: PropTypes.object,
     filteredLocationsByExternalIDs: PropTypes.array,
-    onRouteFinished: PropTypes.func
+    onRouteFinished: PropTypes.func,
+    wayfinderLocation: PropTypes.string,
+    isDraggable: PropTypes.bool,
+    isHideable: PropTypes.bool
 };
 
 /**
@@ -36,9 +39,12 @@ Sidebar.propTypes = {
  * @param {array} props.appViews - Array of all possible views.
  * @param {array} props.filteredLocationsByExternalIDs - Array of locations filtered based on the external ID.
  * @param {function} props.onRouteFinished - Callback that fires when the route has finished.
+ * @param {string} props.wayfinderLocation - Specifies where the wayfinder renders - default to top left.  other options include topright, bottomleft, or bottomright.
+ * @param {boolean} props.isDraggable - specifies if the sidebar is draggable or not.
+ * @param {boolean} props.isHideable - specifies if the sidebar is collapsable or not.
  *
  */
-function Sidebar({ directionsFromLocation, directionsToLocation, pushAppView, currentAppView, appViews, onRouteFinished }) {
+function Sidebar({ directionsFromLocation, directionsToLocation, pushAppView, currentAppView, appViews, onRouteFinished, wayfinderLocation, isDraggable, isHideable }) {
     const [currentLocation, setCurrentLocation] = useRecoilState(currentLocationState);
     const [filteredLocationsByExternalIDs, setFilteredLocationsByExternalID] = useRecoilState(filteredLocationsByExternalIDState);
     const [, setLocationId] = useRecoilState(locationIdState);
@@ -144,11 +150,12 @@ function Sidebar({ directionsFromLocation, directionsToLocation, pushAppView, cu
 
     function toggleModal(){
         setIsShowing(!isShowing);
+        console.log(wayfinderLocation, isDraggable, isHideable)
     }
 
     return (
         <>
-            <button onClick={() => toggleModal()}>Minus</button>
+            {isHideable && <button onClick={() => toggleModal()}>Minus</button>}
             {isShowing && <div>
                 {pages}
             </div>}
