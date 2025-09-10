@@ -37,7 +37,10 @@ MapsIndoorsMap.propTypes = {
     center: PropTypes.string,
     useAppTitle: PropTypes.bool,
     showMapMarkers: PropTypes.bool,
-    mapboxMapStyle: PropTypes.string
+    mapboxMapStyle: PropTypes.string,
+    wayfinderLocation: PropTypes.string,
+    isDraggable: PropTypes.bool,
+    isHideable: PropTypes.bool
 };
 
 /**
@@ -76,6 +79,9 @@ MapsIndoorsMap.propTypes = {
  * @param {boolean} [props.useAppTitle] - Specifies if the Map Template should set the document title as defined in the App Config. The default value is set to false.
  * @param {boolean} [props.showMapMarkers] - Specifies if the Map Template should show the Map Markers. The default value is set to true.
  * @param {string} [props.mapboxMapStyle] - Specifies the Mapbox Map Style to use. The default value is set to "mapbox://styles/mapbox/standard".
+ * @param {string} [props.wayfinderLocation] - Specifies where the wayfinder renders - default to top left.  other options include topright, bottomleft, or bottomright.
+ * @param {boolean} [props.isDraggable] - specifies if the sidebar is draggable or not.
+ * @param {boolean} [props.isHideable] - specifies if the sidebar is collapsable or not.
  */
 function MapsIndoorsMap(props) {
 
@@ -98,7 +104,10 @@ function MapsIndoorsMap(props) {
             searchExternalLocations: true,
             showExternalIDs: false,
             hideNonMatches: false,
-            useAppTitle: false
+            useAppTitle: false,
+            wayfinderLocation: 'topleft',
+            isDraggable: true,
+            isHideable: true,
         };
 
         const apiKeyQueryParameter = queryStringParams.get('apiKey');
@@ -134,6 +143,9 @@ function MapsIndoorsMap(props) {
         const useAppTitleQueryParameter = queryStringParams.get('useAppTitle');
         const showMapMarkersQueryParameter = queryStringParams.get('showMapMarkers');
         const mapboxMapStyleQueryParameter = queryStringParams.get('mapboxMapStyle');
+        const wayfinderLocationQueryParameter = queryStringParams.get('wayfinderLocation');
+        const isDraggableQueryParameter = queryStringParams.get('isDraggable');
+        const isHideableQueryParameter = queryStringParams.get('isHideable');
         // Set the initial props on the Map Template component.
 
         // For the apiKey and venue, set the venue to "AUSTINOFFICE" if the apiKey is "mapspeople3d" and no venue is provided. We want this as the default venue for the "mapspeople3d" apiKey.
@@ -166,6 +178,9 @@ function MapsIndoorsMap(props) {
             miTransitionLevel: props.supportsUrlParameters && miTransitionLevelQueryParameter ? miTransitionLevelQueryParameter : props.miTransitionLevel,
             category: props.supportsUrlParameters && categoryQueryParameter ? categoryQueryParameter : props.category,
             center: props.supportsUrlParameters && centerQueryParameter ? centerQueryParameter : props.center,
+            wayfinderLocation: props.supportsUrlParameters && wayfinderLocationQueryParameter ? wayfinderLocationQueryParameter : props.wayfinderLocation,
+            isDraggable: props.supportsUrlParameters && isDraggableQueryParameter ? isDraggableQueryParameter : props.isDraggable,
+            isHideable: props.supportsUrlParameters && isHideableQueryParameter ? isHideableQueryParameter : props.isHideable,
             // Handle boolean values
             useKeyboard: getBooleanValue(props.supportsUrlParameters, defaultProps.useKeyboard, props.useKeyboard, useKeyboardQueryParameter),
             useMapProviderModule: getBooleanValue(props.supportsUrlParameters, defaultProps.useMapProviderModule, props.useMapProviderModule, useMapProviderModuleQueryParameter),
