@@ -101,7 +101,7 @@ MapTemplate.propTypes = {
     useAppTitle: PropTypes.bool,
     showMapMarkers: PropTypes.bool,
     mapboxMapStyle: PropTypes.string,
-    wayfindingLocation: PropTypes.string,
+    wayfinderLocation: PropTypes.string,
     isDraggable: PropTypes.bool,
     isHideable: PropTypes.bool
 };
@@ -145,7 +145,7 @@ MapTemplate.propTypes = {
  * @param {boolean} [props.isDraggable] - specifies if the sidebar is draggable or not - default is false
  * @param {boolean} [props.isHideable] - specifies if the sidebar is collapsable or not - default is false.
  */
-function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, primaryColor, logo, appUserRoles, directionsFrom, directionsTo, externalIDs, tileStyle, startZoomLevel, bearing, pitch, gmMapId, useMapProviderModule, kioskOriginLocationId, language, supportsUrlParameters, useKeyboard, timeout, miTransitionLevel, category, searchAllVenues, hideNonMatches, showRoadNames, showExternalIDs, searchExternalLocations, center, useAppTitle, showMapMarkers, mapboxMapStyle, wayfindingLocation, isDraggable, isHideable }) {
+function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, primaryColor, logo, appUserRoles, directionsFrom, directionsTo, externalIDs, tileStyle, startZoomLevel, bearing, pitch, gmMapId, useMapProviderModule, kioskOriginLocationId, language, supportsUrlParameters, useKeyboard, timeout, miTransitionLevel, category, searchAllVenues, hideNonMatches, showRoadNames, showExternalIDs, searchExternalLocations, center, useAppTitle, showMapMarkers, mapboxMapStyle, wayfinderLocation, isDraggable, isHideable }) {
 
     const [userSelectedLanguage, setUserSelectedLanguage] = useState(false);
     const [mapOptions, setMapOptions] = useState({ brandingColor: primaryColor });
@@ -777,6 +777,33 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
         setSelectedCategory(null); // unselect category when route is finished
     }
 
+    // Helper to map wayfinderLocation to style
+function getSidebarPosition(location) {
+    switch (location) {
+        case 'topright':
+            return { top: 10, right: 10, left: 'auto', bottom: 'auto' };
+        case 'bottomleft':
+            return { bottom: 10, left: 10, top: 'auto', right: 'auto' };
+        case 'bottomright':
+            return { bottom: 10, right: 10, left: 'auto', top: 'auto' };
+        case 'topleft':
+        default:
+            return { top: 10, left: 10, right: 'auto', bottom: 'auto' };
+    }
+}
+
+const sidebarStyle = {
+    position: "absolute",
+    zIndex: 1100,
+    cursor: dragging ? "grabbing" : "grab",
+    userSelect: "none",
+    height: "80vh",
+    width: "300px",
+    ...(wayfinderLocation
+        ? getSidebarPosition(wayfinderLocation, sidebarPosition)
+        : { left: sidebarPosition.x, top: sidebarPosition.y }),
+};
+
     /**
      * Function that handles the finishing of route.
      */
@@ -832,34 +859,12 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
                 <>
                     {isDraggable ? (
                     <div
-                        style={{
-                        position: "absolute",
-                        left: sidebarPosition.x,
-                        top: sidebarPosition.y,
-                        zIndex: 1100,
-                        cursor: dragging ? "grabbing" : "grab",
-                        userSelect: "none",
-                        height: "80vh",
-                        width: "300px",
-                        }}
+                        className={sidebarStyle}
                         onPointerDown={handlePointerDown}
                         onPointerMove={handlePointerMove}
                         onPointerUp={handlePointerUp}
                         onPointerLeave={handlePointerUp}
                     >
-                        <Sidebar
-                        directionsFromLocation={directionsFromLocation}
-                        directionsToLocation={directionsToLocation}
-                        pushAppView={pushAppView}
-                        currentAppView={currentAppView}
-                        appViews={appStates}
-                        onRouteFinished={() => resetStateAndUI()}
-                        wayfinderLocation={wayfindingLocation}
-                        isDraggable={isDraggable}
-                        isHideable={isHideable}
-                        />
-                    </div>
-                    ) : (
                     <Sidebar
                         directionsFromLocation={directionsFromLocation}
                         directionsToLocation={directionsToLocation}
@@ -867,13 +872,26 @@ function MapTemplate({ apiKey, gmApiKey, mapboxAccessToken, venue, locationId, p
                         currentAppView={currentAppView}
                         appViews={appStates}
                         onRouteFinished={() => resetStateAndUI()}
-                        wayfinderLocation={wayfindingLocation}
+                        wayfinderLocation={wayfinderLocation}
                         isDraggable={isDraggable}
                         isHideable={isHideable}
                     />
-                    )}
-                </>
-                )}
+                </div>
+            ) : (
+                <Sidebar
+                    directionsFromLocation={directionsFromLocation}
+                    directionsToLocation={directionsToLocation}
+                    pushAppView={pushAppView}
+                    currentAppView={currentAppView}
+                    appViews={appStates}
+                    onRouteFinished={() => resetStateAndUI()}
+                    wayfinderLocation={wayfinderLocation}
+                    isDraggable={isDraggable}
+                    isHideable={isHideable}
+                />         
+            )}
+        </>
+    )}
                     
 
         {!isDesktop &&

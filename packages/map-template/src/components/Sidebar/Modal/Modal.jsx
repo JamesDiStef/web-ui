@@ -6,7 +6,8 @@ import PropTypes from 'prop-types';
 
 Modal.propTypes = {
     children: PropTypes.node,
-    isOpen: PropTypes.bool
+    isOpen: PropTypes.bool,
+    wayfinderLocation: PropTypes.string
 };
 
 /**
@@ -18,8 +19,9 @@ Modal.propTypes = {
  * @param {Object} props
  * @param {React.ReactNode} props.children - The content to be displayed inside the modal.
  * @param {boolean} props.isOpen - If the modal is open (visible) or not.
+ * @param {string} props.wayfinderLocation - Specifies where the wayfinder renders - default to top left.  other options include topright, bottomleft, or bottomright.
  */
-function Modal({ children, isOpen }) {
+function Modal({ children, isOpen, wayfinderLocation }) {
 
     /** Boolean for controlling the "full" CSS class modifier */
     const [fullHeight, setFullHeight] = useState(false);
@@ -33,6 +35,7 @@ function Modal({ children, isOpen }) {
      * If the height of the content is bigger than the height of the modal, the fullHeight should be set.
      */
     useEffect(() => {
+        console.log("test james ", wayfinderLocation)
         if (!contentRef) return;
         const observer = new MutationObserver(() => {
             const contentHeight = contentRef.current.clientHeight;
@@ -48,7 +51,7 @@ function Modal({ children, isOpen }) {
     }, [contentRef]);
 
     return <div ref={modalRef}
-        className={`modal ${isOpen ? 'modal--open' : ''} ${fullHeight ? 'modal--full' : ''} ${kioskLocation ? 'modal--kiosk' : ''}`}
+        className={`modal ${wayfinderLocation} ${isOpen ? 'modal--open' : ''} ${fullHeight ? 'modal--full' : ''} ${kioskLocation ? 'modal--kiosk' : ''} `}
     >
         <div ref={contentRef} className="modal__content">
             {children}
